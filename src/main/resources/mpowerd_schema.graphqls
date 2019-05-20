@@ -1,0 +1,296 @@
+type Query {
+    getBillDetails(bill_id: ID!): Bill
+    #    getAllPastDueBills: [Bill]
+    #    getAllDueBills: [Bill]
+    #    getAllPaidBills: [Bill]
+    getAwardPointHistory: [AwardPointsSummary]
+    getUserInfo(user_id: ID!): User
+    getAllPaymentPlans: [PaymentPlan]
+    getAllPaymentMethods: [PaymentMethod]
+    getProviderByName(provider_name: String!): Provider
+    getBillSummary: BillSummary
+}
+
+type Mutation {
+    createUser(NewUserDetails: NewUserDetails): User
+    createBill(NewBillDetails: NewBillDetails): Bill
+    #    createPatient(NewPatientDetails: NewPatientDetails): Patient
+    createProvider(NewProviderDetails: NewProviderDetails): Patient
+    #    createAddress(NewAddressDetails: NewAddressDetails): Address
+    #    createAwardPoints(NewAwardPointsDetails: NewAwardPointsDetails): AwardPoints
+    #    create_new_account(NewAccountDetails: NewAccountDetails): Account
+    payBillUsingCreditCard(PayBillCCDetails: PayBillCCDetails): PaymentStatus
+    payBillUsingBanking(PayBillBankingDetails: PayBillBankingDetails): PaymentStatus
+    updateUserInfo(UpdateUserDetails: UpdateUserDetails): User
+    markBillStatus(BillStatusUpdateDetails: BillStatusUpdateDetails): Boolean
+}
+
+
+enum Gender {
+    MALE
+    FEMALE
+    OTHER
+}
+
+enum MaritalStatus {
+    MARRIED
+    UNMARRIED
+    DIVORCED
+}
+
+scalar Date
+
+type User {
+    id: ID!
+    active: Boolean!
+    first_name: String!
+    last_name: String!
+    email: String!
+    gender: Gender
+    birth_date: Date
+    marital_status: MaritalStatus
+    home_address: Address
+    work_address: Address
+    contact: String
+}
+
+type Address {
+    id: ID!
+    address_line_1: String
+    address_line_2: String
+    city: String
+    district: String
+    state: String
+    postal_code: String
+    country: String
+}
+
+enum Relation {
+    SELF
+    PARENT
+    SPOUSE
+    CHILD
+}
+
+type Patient {
+    id: ID!
+    user: User!
+    relation: Relation!
+    active: Boolean!
+    first_name: String
+    last_name: String
+}
+
+type Account {
+    id: ID!
+    account_number: String!
+    active: Boolean!
+    patient: Patient!
+    provider: Provider!
+}
+
+type Provider {
+    id: ID!
+    provider_number: String!
+    active: Boolean!
+    name: String!
+    addreess: Address
+}
+
+enum BillStatus {
+    PENDING
+    PROCESSING
+    SCHEDULED
+    CANCELED
+    BALANCED
+}
+
+type Bill {
+    id: ID!
+    status: BillStatus!
+    patient: Patient!
+    user: User!
+    provider: Provider!
+    account: Account!
+    bill_date: Date!
+    due_date: Date!
+    total_due: Float!
+    note: String
+    bill_file_path: String
+}
+
+enum PaymentStatus {
+    PENDING
+    FAILED
+    APPROVED
+    APPROVAL_PENDING
+    DECLIEND
+    SCHEDULED
+}
+
+enum PaymentType {
+    ONETIME
+    INSTALLMENT
+}
+
+type Payment {
+    id: ID!
+    status: PaymentStatus!
+    bill: Bill!
+    type: PaymentType!
+    mode: PaymentMethod!
+    amount: Float!
+    date_of_payment: Date!
+    due_date: Date
+    payment_plan: PaymentPlan
+}
+
+enum PaymentMode {
+    CREDIT_CARD
+    BANKING
+}
+
+type PaymentMethod {
+    id: ID!
+    user: User
+    payment_mode: PaymentMode!
+    card_number: String
+    cnv: String
+    expiry_date: Date
+    zip: String
+    routing_number: String
+    account_number: String
+    driving_licence: String
+    state: String
+    phone_number: String
+}
+
+enum PlanType {
+    THREE_MONTHS
+    SIX_MONTHS
+    TWELVE_MONTHS
+}
+
+type PaymentPlan {
+    id: ID!
+    plan_type: PlanType
+    active: Boolean!
+}
+
+enum OperationType {
+    REFER_A_FRIEND
+    BILL_PAYMENT
+}
+
+type AwardPoints {
+    id: ID!
+    user: User
+    points: Int
+    operation_type: OperationType
+    created_date: Date
+    expiry_date: Date
+}
+
+type AwardPointsSummary {
+    id: ID!
+    award_points_history: [AwardPoints]
+    award_points_earned: Int
+    award_points_redeemed: Int
+    award_points_balance: Int
+}
+
+type BillSummary {
+    past_due_bills: [Bill]
+    due_bills: [Bill]
+    paid_bills: [Bill]
+    bills_due_amount: Float
+    direct_pay_amount: Float
+    loan_pay_amount: Float
+    amount_spent_this_month: Float
+}
+
+input NewUserDetails {
+    first_name: String
+    last_name: String
+    email: String
+}
+
+input NewBillDetails {
+    patient_id: ID
+    provider_id: ID
+    account_id: ID
+    bill_date: Date
+    due_datee: Date
+    total_due: Float
+    note: String
+    bill_file_path: String
+}
+
+input NewPatientDetails {
+    relation: Relation
+    first_name: String
+    last_name: String
+    contact: String
+}
+
+input NewProviderDetails {
+    provider_number: String
+    name: String
+    address_id: String
+}
+
+input NewAddressDetails {
+    address_line_1: String
+    address_line_2: String
+    city: String
+    district: String
+    state: String
+    postal_code: String
+    country: String
+}
+
+input NewAwardPointsDetails {
+    point: Int
+    operation_type: OperationType
+    expiry_date: Date
+}
+
+input NewAccountDetails {
+    account_number: String
+    patient_id: ID
+    provider_id: ID
+}
+
+input PayBillCCDetails {
+    bill_id: ID
+    card_number: String
+    cvn: String
+    expiry_date: Date
+    zip: String
+    phone_number: String
+}
+
+input PayBillBankingDetails {
+    bill_id: ID
+    routing_number: String
+    account_number: String
+    drivers_licence: String
+    state: String
+}
+
+input UpdateUserDetails {
+    first_name: String
+    last_name: String
+    email: String
+    gender: Gender
+    birt_date: Date
+    marital_status: MaritalStatus
+    home_address_id: ID
+    work_address_id: ID
+    contact: String
+}
+
+input BillStatusUpdateDetails {
+    bill_id: ID
+    bill_status: BillStatus
+}
